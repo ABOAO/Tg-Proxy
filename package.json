@@ -1,1 +1,4 @@
-npm init -y
+{
+  "name": "tg-proxy",
+  "private": true
+}
