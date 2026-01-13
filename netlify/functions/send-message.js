@@ -15,22 +15,44 @@ export const handler = async (event) => {
     return { statusCode: 400, body: "Invalid JSON" };
   }
 
-  const { botToken, chatId, message } = body;
+  const {
+    botToken,
+    chatId,
+    message,
+    parseMode = "HTML",          // ✅ n8n 傳 parseMode，預設 HTML
+    threadId,                    // ✅ 你自訂欄位
+    message_thread_id,           // ✅ 也支援 TG 原生欄位
+    disablePreview,
+    disableNotification
+  } = body;
+
   if (!botToken || !chatId || !message) {
     return { statusCode: 400, body: "Missing botToken/chatId/message" };
   }
 
-  const resp = await fetch(
-    `https://api.telegram.org/bot${botToken}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-      }),
-    }
-  );
+  const payload = {
+    chat_id: chatId,
+    text: message,
+    parse_mode: parseMode,       // ✅ 這行就是你缺的
+  };
+
+  const tid = message_thread_id ?? threadId;
+  if (tid !== undefined && tid !== null && String(tid).length > 0) {
+    payload.message_thread_id = Number(tid);
+  }
+
+  if (disablePreview !== undefined) {
+    payload.disable_web_page_preview = !!disablePreview;
+  }
+  if (disableNotification !== undefined) {
+    payload.disable_notification = !!disableNotification;
+  }
+
+  const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
   const text = await resp.text();
 
