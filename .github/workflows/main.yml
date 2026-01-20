@@ -9,5 +9,12 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping n8n Space
-        run: curl -s https://abaoz1102-n8n-free.hf.space/ || echo "pong"
+      - name: Ping n8n healthz (prevent sleep)
+        run: |
+          set -e
+          URL="https://abaoz1102-n8n-free.hf.space/healthz?ts=$(date +%s)"
+          curl -fsSL -L "$URL" \
+            -H "Cache-Control: no-cache" \
+            --max-time 20 \
+            -o /dev/null \
+            -w "status=%{http_code}\n"
