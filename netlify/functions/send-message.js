@@ -20,8 +20,8 @@ export const handler = async (event) => {
     chatId,
     message,
     parseMode = "HTML",          // ✅ n8n 傳 parseMode，預設 HTML
-    threadId,                    // ✅ 你自訂欄位
-    message_thread_id,           // ✅ 也支援 TG 原生欄位
+    threadId,                    // ✅ 自訂欄位
+    message_thread_id,           // ✅ 支援 TG 原生欄位
     disablePreview,
     disableNotification
   } = body;
@@ -33,7 +33,7 @@ export const handler = async (event) => {
   const payload = {
     chat_id: chatId,
     text: message,
-    parse_mode: parseMode,       // ✅ 這行就是你缺的
+    parse_mode: parseMode,       // ✅ 回覆訊息使用格式
   };
 
   const tid = message_thread_id ?? threadId;
