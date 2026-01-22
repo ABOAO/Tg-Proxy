@@ -15,43 +15,22 @@ export const handler = async (event) => {
     return { statusCode: 400, body: "Invalid JSON" };
   }
 
-  const {
-    botToken,
-    chatId,
-    message,
-    parseMode = "HTML",          // ✅ n8n 傳 parseMode，預設 HTML
-    threadId,                    // ✅ 自訂欄位
-    message_thread_id,           // ✅ 支援 TG 原生欄位
-    disablePreview,
-    disableNotification
-  } = body;
+  // 只保留 botToken 作為 proxy 層需求，其餘都視為 Telegram 原生 sendMessage payload
+  const { botToken, ...tgPayload } = body;
 
-  if (!botToken || !chatId || !message) {
-    return { statusCode: 400, body: "Missing botToken/chatId/message" };
+  if (!botToken) {
+    return { statusCode: 400, body: "Missing botToken" };
   }
 
-  const payload = {
-    chat_id: chatId,
-    text: message,
-    parse_mode: parseMode,       // ✅ 回覆訊息使用格式
-  };
-
-  const tid = message_thread_id ?? threadId;
-  if (tid !== undefined && tid !== null && String(tid).length > 0) {
-    payload.message_thread_id = Number(tid);
-  }
-
-  if (disablePreview !== undefined) {
-    payload.disable_web_page_preview = !!disablePreview;
-  }
-  if (disableNotification !== undefined) {
-    payload.disable_notification = !!disableNotification;
+  // 建議至少檢查 sendMessage 必要欄位（避免打到 TG 才報錯）
+  if (tgPayload.chat_id === undefined || tgPayload.text === undefined) {
+    return { statusCode: 400, body: "Missing chat_id/text" };
   }
 
   const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(tgPayload),
   });
 
   const text = await resp.text();
